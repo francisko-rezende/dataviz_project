@@ -20,6 +20,7 @@ library(zoo)
 library(forcats)
 library(ggthemes)
 library(knitr)
+library(here)
 
 ## set working directory
 # knitr::opts_knit$set(root.dir = '/cloud/project')
@@ -41,12 +42,15 @@ pets <- read.csv("data/raw_data/seattle_pet_licenses.csv", stringsAsFactors = FA
 
 ## Explore the Data
 
+In this section I explored the data. This exploration was guided by some questions I was supposed to answer. The questions and the code I used for finding out their answers can be found below.
+
 ```{r pet-explore, warning=FALSE} 
 ## Include code here to explore the data 
 ## and answer the questions in the exercise
 
 # Q1 How many pet licenses are included in the dataset?
 glimpse(pets)
+# A: number of observations = number of licenses
 
 # How many unique pet names are included in the dataset (animal_s_name)
 
@@ -59,6 +63,11 @@ pets %>% distinct(species) %>% summarise(unique_spp = n())
 
 ## Visualize the Data
 
+Visualization happened similarly yo exploration: I was given some tasks to visualize some data properties/patterns. 
+Some of the code was provided and some was written by me.
+More information on what parts of the code i wrote and what I modified can be found as comments in the chunks.
+The code also is commented with information on what different lines do.
+
 ```{r pet-barchart, warning=FALSE} 
 ## visual breakdown of how many of each species 
 ## are included in the dataset
@@ -68,6 +77,7 @@ ggplot(pets) +
 
 ```{r pet-cat-table, warning=FALSE} 
 ## Table: Most frequent Cat Name 
+#In this cunk I had to include the dataset, the species I wanted to generate the table for, and the variables that I group the data by. The rest of the code was provided as it is.
 pets %>% 
   filter(species == "Cat", animal_s_name != "") %>%
   group_by(animal_s_name) %>% 
@@ -79,7 +89,7 @@ pets %>%
 
 ```{r pet-dog-table, warning=FALSE} 
 ## Table: Most frequent Dog Name
-## ADD CODE!
+## This chunk was written by me.
 pets %>% 
   filter(species == "Dog", animal_s_name != "") %>% #keeps only dogs whose name is not ""
   group_by(animal_s_name) %>%  #groups the occurences by pet name
@@ -124,7 +134,9 @@ pets %>%
 
 # Part 2: Explanatory Data Analysis
 
-The data used in this part of the project were dowloaded from [FiveThirtyEight](https://data.fivethirtyeight.com/) - `steak-survey`.  They were originally used in the article: [How Americans Like Their Steak](https://fivethirtyeight.com/features/how-americans-like-their-steak/). The goal of this part of the project will be to recreate the data visualization used in this article.
+The data used in this part of the project were downloaded from [FiveThirtyEight](https://data.fivethirtyeight.com/) - `steak-survey`.  They were originally used in the article: [How Americans Like Their Steak](https://fivethirtyeight.com/features/how-americans-like-their-steak/). The goal of this part of the project will be to recreate the data visualization used in this article.
+
+Similarly to part 1, I followed instructions for exploring and visualizing the data. These instructions are within the chunks written as comments.
 
 ## The Data
 
@@ -140,6 +152,31 @@ steak <- read.csv("data/raw_data/steak-risk-survey.csv", stringsAsFactors = FALS
 ```{r meat-explore, warning=FALSE} 
 ## Include code here to explore the data 
 ## and answer the questions in the exercise
+
+# Q12 How many people participated in the survey?
+steak %>% 
+  glimpse()
+
+# Q13 Which piece of information was NOT collected about the steak survey respondents?
+steak %>% 
+  names()
+
+# Q14 How many people responded “Yes” to the question “Do you eat steak?”
+
+steak %>% 
+  group_by(Do.you.eat.steak.) %>% 
+  summarize(n = n())
+
+# Q15 How many different (unique) responses were there to the question “How do you like your steak prepared?”
+
+steak %>% 
+  distinct(How.do.you.like.your.steak.prepared.) %>% 
+  filter( How.do.you.like.your.steak.prepared. != "") %>% 
+  summarize(n_unique = nrow(.))
+# I've had an issue with this one. There are entries with "" as a reply for the "how do you like your steak…" question. At first I thought that should be included as an unique answer, which would mean there would be 6unique answers. That isn't an alterative to reply to the exercise though so I'll disconsider "" as a valid answer to the survey.
+
+# EDIT: added code to filter out ""
+  
 ```
 
 ## Wrangle the Data
@@ -152,11 +189,11 @@ pref <- steak %>%
                                         "Medium Well",
                                         "Medium",
                                         "Medium rare",
-                                        "Rare"))) %>% 
-  filter(steak_pref != "") %>% 
-  group_by(steak_pref) %>% 
-  summarise(n = n()) %>%
-  mutate(prop = n / sum(n))
+                                        "Rare"))) %>% #creates new column called "steak_pref" with the content from "How.do.you.like.your.steak.prepared." coverted into a factor with the listed levels
+  filter(steak_pref != "") %>% #Removes cases that had "" as a reply (when someone didn't answer I guess)
+  group_by(steak_pref) %>% #Groups data by steak_pref 
+  summarise(n = n()) %>% #counts number of cases of each answer
+  mutate(prop = n / sum(n)) #creates column with proportion of cases that belong to each answer
 ```
 
 ## Visualize the Data
@@ -165,7 +202,7 @@ pref <- steak %>%
 ## generate the plot 
 p <- ggplot(pref) +
   ## specify you want to generate a bar chart
-  function_name(aes(x = steak_pref, y = prop, fill = steak_pref),
+  geom_bar(aes(x = steak_pref, y = prop, fill = steak_pref),
                 stat = 'identity', 
                 width = 0.7) + 
   ## this adds text labels (you don't have to change anything here)
@@ -177,32 +214,32 @@ p <- ggplot(pref) +
             size = 5,
             color = "grey40") +
   ## flip coordinates to make horizontal box plot
-  function_name() +
+  coord_flip() +
   ## change the colors of the bars
-  function_name(values = c("#370B01", 
+  scale_fill_manual(values = c("#370B01", 
                            "#70402C",
                            "#955732", 
                            "#B36153",
                            "#B5413F")) +
   ## change the scale/labels of the steak-wellness variable (x-axis)
-  function_name(limits = levels(fct_rev(pref$steak_pref)),
+  scale_x_discrete(limits = levels(fct_rev(pref$steak_pref)),
                 labels = c("Well", 
                            "Medium Well" = "Medium-well",
                            "Medium",
                            "Medium rare"="Medium-rare",
                            "Rare")) +
   ## change the scale/lables of the percent axis (y-axis)
-  function_name(labels = scales::percent, 
+  scale_y_continuous(labels = scales::percent, 
                 expand = c(mult = c(0,0), 
                            add = c(0,0.035))) +
   ## change the title, subtitle, and caption
-  function_name(title="'How Do You Like Your Steak Prepared?'", 
+  labs(title="'How Do You Like Your Steak Prepared?'", 
                 subtitle="From a survey of 432 steak-eating Americans",
                 caption="FiveThirtyEight: Surveymonkey") +
   ## change the theme (use ggthemes)
-  function_name() +
+  ggthemes::theme_fivethirtyeight() +
   ## fine tune the theme
-  function_name(axis.text = element_text(size = 14), 
+  theme(axis.text = element_text(size = 14), 
                 title = element_text(size = 16), 
                 legend.position="none", 
                 plot.caption=element_text(size = 12), 
@@ -218,19 +255,132 @@ p
 
 ```{r save-plot, warning=FALSE}
 ## save plot to figures/explanatory_figures directory
-ggsave(plot = OBJECT_NAME, filename = FILENAME, width = 8, height = 4)
+ggsave(plot = p, filename = here::here("figures", "explanatory_figures", "how_do_you_like_your_steak.pdf"), width = 11, height = 8)
+#I used the package here as a workaround to making file paths since I had to work on this project locally due to Rstudio cloud's terminal being while I was doing so.
 ```
 
 ## Visualize the Data
 
+This section was written by me. I used the code I was given during this project to create my own visualizations. I ended up creating two plots, one showing the proportion of people who preferred different steak wellness (?) classes by age group and one plot showing the proportion of people who eat steak and gamble. I decided to save the latter but I kept the code for the former here too since it was already done anyways :)
+
+I'd like to point out that even though the plots look off in this report (e.g., text being cut and weird proportions), the files generated by the code do not have such issues.
+
 ```{r meat-plot, warning=FALSE} 
 ### Explore the data -- create your own plot!
 
+steak %>%
+  mutate(
+    age = factor(Age,
+                 levels = c("18-29",
+                            "30-44",
+                            "45-60",
+                            "> 60")),
+    steak_pref = factor(
+      How.do.you.like.your.steak.prepared.,
+      levels = c("Well",
+                 "Medium Well",
+                 "Medium",
+                 "Medium rare",
+                 "Rare")
+    )
+  ) %>%
+  mutate(age = fct_rev(age)) %>%
+  filter(age != "", steak_pref != "") %>%
+  group_by(age, steak_pref) %>%
+  summarize(n = n()) %>%
+  mutate(prop = n / sum(n)) %>%
+  # mutate(age = fct_rev(age)) %>%
+  ggplot(aes(x = age, y = prop, fill = steak_pref)) +
+  geom_bar(stat = "identity",
+           position = position_dodge(.9)) +
+  geom_text(aes(label = paste0(as.integer(prop*100),"%"),
+                x = age,
+                y = prop),
+            stat = "identity",
+            position = position_dodge(.9),
+            hjust = -0.1,
+            color = "grey40")+
+  coord_flip() +
+  scale_fill_manual(values = c("#370B01",
+                               "#70402C",
+                               "#955732",
+                               "#B36153",
+                               "#B5413F"),
+                    labels = c("Well",
+                               "Medium Well" = "Medium-well",
+                               "Medium",
+                               "Medium rare" = "Medium-rare",
+                               "Rare")) +
+  guides(fill = guide_legend(reverse = TRUE)) +
+  labs(
+    fill = "How do you like your\nsteak prepared?",
+    y = element_blank(),
+    x = "Age group",
+    title = "Growing older & rarer",
+    subtitle = "The proportion of people that enjoy rare steaks is the largest among who is older than 60.\nThis group also has the smaller proportion of well-done steak lovers.",
+    caption = "FiveThirtyEight: Surveymonkey"
+  ) +
+  ggthemes::theme_fivethirtyeight() +
+  theme(
+    axis.text.x = element_blank(),
+    axis.ticks = element_blank(),
+    panel.grid = element_blank(),
+    axis.text = element_text(size = 14),
+    title = element_text(size = 16),
+    legend.title = element_text(size = 12)
+  )
+
+ my_plot <- 
+  steak %>% 
+  mutate(gamble = Do.you.ever.gamble., eat_steak = Do.you.eat.steak.) %>% 
+  filter(gamble != "" & eat_steak != "") %>%
+  group_by(eat_steak, gamble) %>%
+  summarise(n = n()) %>% 
+  mutate(prop = n / sum(n)) %>% 
+ggplot(aes(x = eat_steak, y = prop, fill= gamble)) +
+  geom_bar(stat = "identity", width = .7) +
+  coord_flip() +
+  scale_fill_manual(values = c("grey40", "#B5413F")) +
+  scale_x_discrete(labels = c("Doesn't eat steak", "Eats steak")) +
+  scale_y_continuous(labels = scales::percent, 
+                expand = c(mult = c(0,0), 
+                           add = c(0,0.035))) +
+  # geom_text(aes(label = paste0(round(prop*100,1),"%"),
+  #               x = eat_steak,
+  #               y = c(1, .383, 1, .505)),
+  #           stat = "identity",
+  #           hjust = -0.1,
+  #           color = "black",
+  #           size = 5) +
+  geom_text(aes(label = paste0(round(prop*100,1),"% (", "n = ", n, ")"),
+                x = eat_steak,
+                y = prop),
+            stat = "identity",
+            # hjust = -1,
+            # color = "grey40",
+            position = position_stack(vjust = .5),
+            size = 5) +
+  labs(title = "Raise the steaks",
+       subtitle = "The proportion of gamblers is larger among steak-eaters than among\nthose who doesn't eat steak.",
+       caption = "FiveThirtyEight: Surveymonkey",
+       fill = "Do you ever gamble?") +
+  theme_fivethirtyeight() +
+  theme(panel.grid = element_blank(),
+        axis.text.x = element_blank(),
+        title = element_text(size = 20),
+        axis.text = element_text(size = 16),
+        legend.title = element_text(size = 16),
+        legend.text = element_text(size = 16)
+        ) +
+  guides(fill =guide_legend(reverse = TRUE))
+
+my_plot
 ```
 
 ## Save this plot 
 
 ```{r save-meat-plot, warning=FALSE}
 ## save plot to figures/explanatory_figures directory
-ggsave(plot = OBJECT_NAME, filename = DIFFERENT_FILENAME)
+#ggsave(plot = OBJECT_NAME, filename = DIFFERENT_FILENAME)
+ggsave(plot = my_plot, filename = here::here("figures", "explanatory_figures", "raise_the_steaks.pdf"),  width = 11, height = 8)
 ```
