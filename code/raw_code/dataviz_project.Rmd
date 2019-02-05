@@ -101,7 +101,7 @@ pets %>%
 
 ```{r pet-linechart, warning=FALSE} 
 ## add date and ym columns
-pets$date <- lubridate::ymd_hms(pets$license_issue_date)
+pets$date <- lubridate::ymd_hms(pets$license_issue_date) #Converts the info in "pets$license_issue_date" to a data & hour class object.
 pets$ym <- as.yearmon(pets$date, "%y%m")
 
 ## how the number of licenses recorded has changed over time
