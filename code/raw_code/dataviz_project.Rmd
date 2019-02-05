@@ -1,7 +1,7 @@
 ---
 title: "Data Visualization Project"
 author: "Francisko de Moraes Rezende"
-date: "6/19/2018"
+date: "2019/1/26"
 output: html_document
 ---
 
@@ -77,7 +77,7 @@ ggplot(pets) +
 
 ```{r pet-cat-table, warning=FALSE} 
 ## Table: Most frequent Cat Name 
-#In this cunk I had to include the dataset, the species I wanted to generate the table for, and the variables that I group the data by. The rest of the code was provided as it is.
+#In this chunk I had to include the dataset, the species I wanted to generate the table for, and the variables that I group the data by. The rest of the code was provided as it is.
 pets %>% 
   filter(species == "Cat", animal_s_name != "") %>%
   group_by(animal_s_name) %>% 
@@ -96,7 +96,7 @@ pets %>%
   summarise(n = n()) %>% #counts how many of each name there is
   arrange(-n) %>% #sorts the occurences in descending order
   top_n(n = 10) %>% #keeps the top 10 most frequent names
-  knitr::kable(., caption = "Top 10 Cat Names in Seattle") #creates table with caption
+  knitr::kable(., caption = "Top 10 Dog Names in Seattle") #creates table with caption
 ```
 
 ```{r pet-linechart, warning=FALSE} 
